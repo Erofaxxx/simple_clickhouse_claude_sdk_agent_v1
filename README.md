@@ -29,7 +29,8 @@ cd simple_clickhouse_claude_sdk_agent_v1
 
 ### 2. Запустите скрипт установки (от root или sudo)
 
-Скрипт установит системные пакеты, Python-зависимости, `uv` и скачает SSL-сертификат Яндекс:
+Скрипт установит системные пакеты, Python-зависимости, `mcp-clickhouse` и скачает SSL-сертификат Яндекс.  
+На серверах с ≤ 1 ГБ RAM автоматически создаст swap-файл (см. раздел «OOM / нехватка памяти»).
 
 ```bash
 bash setup.sh
@@ -78,17 +79,70 @@ python3 agent.py "Покажи топ-10 визитов по количеств�
 # Системные пакеты
 apt-get update && apt-get install -y python3 python3-pip curl wget
 
-# Python-зависимости
+# Python-зависимости (включая mcp-clickhouse)
 pip3 install --upgrade pip
 pip3 install -r requirements.txt
-
-# uv (требуется для mcp-clickhouse)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.cargo/bin:$PATH"   # или перелогиньтесь
 
 # SSL-сертификат Яндекс Cloud
 wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
 ```
+
+> **Примечание:** `uv` больше не требуется. Пакет `mcp-clickhouse` устанавливается напрямую через pip, что значительно снижает потребление памяти.
+
+---
+
+## OOM / нехватка памяти (серверы с ≤ 1 ГБ RAM)
+
+На серверах с малым объёмом оперативной памяти (≤ 1 ГБ) процесс агента может быть убит ядром Linux (OOM Killer) с ошибкой:
+
+```
+Out of memory: Killed process ... (claude) total-vm:74340448kB
+```
+
+или при запуске `agent.py`:
+
+```
+Fatal error in message reader: Command failed with exit code -9
+```
+
+### Причина
+
+Claude SDK + MCP-сервер суммарно требуют ~400–600 МБ RAM. Если на сервере всего ≤ 1 ГБ оперативной памяти и нет swap, OOM Killer завершает процесс.
+
+### Решение 1: Добавить swap (рекомендуется)
+
+Скрипт `setup.sh` делает это автоматически. Вручную:
+
+```bash
+# Создать swap-файл 2 ГБ
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
+# Сделать постоянным (после перезагрузки)
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+# Проверить
+free -m
+```
+
+### Решение 2: Прямой запуск mcp-clickhouse (уже применено)
+
+В текущей версии агент запускает `mcp-clickhouse` напрямую, без промежуточного менеджера `uv`. Это экономит ~200–300 МБ RAM, так как `uv` больше не создаёт отдельное окружение и дочерний процесс.
+
+Если вы обновляете старую версию, убедитесь что `mcp-clickhouse` установлен:
+
+```bash
+pip install mcp-clickhouse
+
+# Проверить
+which mcp-clickhouse
+```
+
+### Решение 3: Увеличить RAM сервера
+
+Если swap не помогает — рекомендуется сервер с ≥ 2 ГБ RAM.
 
 ---
 
@@ -122,11 +176,13 @@ wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.
 wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
 ```
 
-**`uv: command not found`**  
-→ Установите uv и добавьте в PATH:
+**`Command failed with exit code -9` / OOM Killer**  
+→ Нехватка памяти. См. раздел «OOM / нехватка памяти» выше.
+
+**`mcp-clickhouse: command not found`**  
+→ Установите mcp-clickhouse:
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.cargo/bin:$PATH"
+pip install mcp-clickhouse
 ```
 
 **`Не удалось импортировать claude_agent_sdk`**  
