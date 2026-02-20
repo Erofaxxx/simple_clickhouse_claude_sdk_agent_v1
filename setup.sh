@@ -14,14 +14,21 @@ if [ "$TOTAL_MEM_MB" -lt 1500 ]; then
     if [ "$(swapon --show | wc -l)" -le 1 ]; then
         echo "⚠️  Обнаружено мало RAM (${TOTAL_MEM_MB} МБ) и нет swap."
         echo "   Создаю swap-файл 2 ГБ для предотвращения OOM..."
-        fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048 status=progress
-        chmod 600 /swapfile
-        mkswap /swapfile
-        swapon /swapfile
-        if ! grep -q '/swapfile' /etc/fstab; then
-            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        if ! fallocate -l 2G /swapfile 2>/dev/null; then
+            echo "   fallocate недоступен, используется dd..."
+            dd if=/dev/zero of=/swapfile bs=1M count=2048 status=progress
         fi
-        echo "✅ Swap 2 ГБ создан и активирован."
+        if [ ! -f /swapfile ]; then
+            echo "❌ Не удалось создать swap-файл. Пропускаю настройку swap."
+        else
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            if ! grep -q '/swapfile' /etc/fstab; then
+                echo '/swapfile none swap sw 0 0' >> /etc/fstab
+            fi
+            echo "✅ Swap 2 ГБ создан и активирован."
+        fi
     else
         echo "✅ Swap уже активен."
     fi
