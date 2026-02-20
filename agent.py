@@ -196,15 +196,8 @@ async def _run_agent(prompt: str, env: dict) -> None:
         ],
         mcp_servers={
             "mcp-clickhouse": {
-                "command": "uv",
-                "args": [
-                    "run",
-                    "--with",
-                    "mcp-clickhouse",
-                    "--python",
-                    "3.10",
-                    "mcp-clickhouse",
-                ],
+                "command": "mcp-clickhouse",
+                "args": [],
                 "env": mcp_env,
             }
         },
@@ -235,8 +228,8 @@ async def _run_agent(prompt: str, env: dict) -> None:
         exc_str = str(exc).lower()
         if "anthropic_api_key" in exc_str or "authentication" in exc_str:
             print("   → Проверьте правильность ANTHROPIC_API_KEY в файле .env")
-        elif "uv" in exc_str:
-            print("   → Убедитесь, что uv установлен: pip install uv  или  curl -LsSf https://astral.sh/uv/install.sh | sh")
+        elif "mcp-clickhouse" in exc_str:
+            print("   → Убедитесь, что mcp-clickhouse установлен: pip install mcp-clickhouse")
         elif "mcp" in exc_str or "clickhouse" in exc_str or "connect" in exc_str:
             print("   → Проверьте настройки ClickHouse (хост, порт, пользователь, пароль, сертификат)")
         raise
