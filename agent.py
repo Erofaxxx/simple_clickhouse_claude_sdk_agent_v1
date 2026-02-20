@@ -182,10 +182,46 @@ def _check_connectivity(host: str, port: int) -> bool:
 # ─── Запуск агента ────────────────────────────────────────────────────────────
 
 
+def _sanitize_string(s: str) -> str:
+    """Sanitizes a string to ensure valid Unicode for JSON encoding.
+
+    Removes any surrogate characters and ensures the string can be safely
+    serialized to JSON without encoding errors. Uses 'surrogateescape' error
+    handler to properly handle any invalid UTF-8 sequences.
+    """
+    if not isinstance(s, str):
+        s = str(s)
+
+    # Remove any surrogate characters by encoding/decoding
+    # Use 'surrogatepass' to handle existing surrogates, then 'replace' to fix them
+    try:
+        # First pass: handle any existing surrogates
+        encoded = s.encode('utf-8', errors='surrogatepass')
+        # Second pass: decode and replace any invalid sequences
+        decoded = encoded.decode('utf-8', errors='replace')
+
+        # Verify it can be JSON-serialized
+        import json
+        json.dumps(decoded, ensure_ascii=False)
+
+        return decoded
+    except (UnicodeDecodeError, UnicodeEncodeError, TypeError):
+        # Fallback: use ASCII-safe encoding
+        try:
+            return s.encode('ascii', errors='replace').decode('ascii')
+        except:
+            # Last resort: return empty string
+            return ""
+
+
 async def _run_agent(prompt: str, env: dict) -> None:
     """Выполняет один запрос к агенту и печатает результат."""
+    # Sanitize the prompt to prevent JSON encoding errors
+    prompt = _sanitize_string(prompt)
+
     # Убираем пустые значения чтобы не передавать пустые строки в MCP
-    mcp_env = {k: v for k, v in env.items() if v}
+    # Also sanitize all environment variable values to prevent encoding issues
+    mcp_env = {k: _sanitize_string(v) for k, v in env.items() if v}
 
     options = ClaudeAgentOptions(
         allowed_tools=[
@@ -226,7 +262,12 @@ async def _run_agent(prompt: str, env: dict) -> None:
     except Exception as exc:
         print(f"\n❌ Ошибка при выполнении запроса: {exc}")
         exc_str = str(exc).lower()
-        if "anthropic_api_key" in exc_str or "authentication" in exc_str:
+
+        # Check for JSON encoding errors specifically
+        if "invalid" in exc_str and "surrogate" in exc_str:
+            print("   → Обнаружена проблема с кодировкой Unicode")
+            print("   → Попробуйте использовать только латиницу или проверьте переменные окружения")
+        elif "anthropic_api_key" in exc_str or "authentication" in exc_str:
             print("   → Проверьте правильность ANTHROPIC_API_KEY в файле .env")
         elif "mcp-clickhouse" in exc_str:
             print("   → Убедитесь, что mcp-clickhouse установлен: pip install mcp-clickhouse")
