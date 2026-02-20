@@ -189,14 +189,29 @@ def _sanitize_string(s: str) -> str:
     serialized to JSON without encoding errors. Uses 'surrogateescape' error
     handler to properly handle any invalid UTF-8 sequences.
     """
-    # First, encode with surrogateescape to handle any existing surrogates
-    # Then decode back to string with replace to fix any invalid sequences
+    if not isinstance(s, str):
+        s = str(s)
+
+    # Remove any surrogate characters by encoding/decoding
+    # Use 'surrogatepass' to handle existing surrogates, then 'replace' to fix them
     try:
-        # Try to encode/decode to ensure valid UTF-8
-        return s.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
-    except (UnicodeDecodeError, UnicodeEncodeError):
-        # Fallback: use strict ASCII-safe encoding
-        return s.encode('ascii', errors='replace').decode('ascii')
+        # First pass: handle any existing surrogates
+        encoded = s.encode('utf-8', errors='surrogatepass')
+        # Second pass: decode and replace any invalid sequences
+        decoded = encoded.decode('utf-8', errors='replace')
+
+        # Verify it can be JSON-serialized
+        import json
+        json.dumps(decoded, ensure_ascii=False)
+
+        return decoded
+    except (UnicodeDecodeError, UnicodeEncodeError, TypeError):
+        # Fallback: use ASCII-safe encoding
+        try:
+            return s.encode('ascii', errors='replace').decode('ascii')
+        except:
+            # Last resort: return empty string
+            return ""
 
 
 async def _run_agent(prompt: str, env: dict) -> None:
@@ -247,7 +262,12 @@ async def _run_agent(prompt: str, env: dict) -> None:
     except Exception as exc:
         print(f"\n❌ Ошибка при выполнении запроса: {exc}")
         exc_str = str(exc).lower()
-        if "anthropic_api_key" in exc_str or "authentication" in exc_str:
+
+        # Check for JSON encoding errors specifically
+        if "invalid" in exc_str and "surrogate" in exc_str:
+            print("   → Обнаружена проблема с кодировкой Unicode")
+            print("   → Попробуйте использовать только латиницу или проверьте переменные окружения")
+        elif "anthropic_api_key" in exc_str or "authentication" in exc_str:
             print("   → Проверьте правильность ANTHROPIC_API_KEY в файле .env")
         elif "mcp-clickhouse" in exc_str:
             print("   → Убедитесь, что mcp-clickhouse установлен: pip install mcp-clickhouse")
