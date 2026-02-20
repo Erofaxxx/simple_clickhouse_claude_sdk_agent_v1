@@ -182,10 +182,31 @@ def _check_connectivity(host: str, port: int) -> bool:
 # ─── Запуск агента ────────────────────────────────────────────────────────────
 
 
+def _sanitize_string(s: str) -> str:
+    """Sanitizes a string to ensure valid Unicode for JSON encoding.
+
+    Removes any surrogate characters and ensures the string can be safely
+    serialized to JSON without encoding errors. Uses 'surrogateescape' error
+    handler to properly handle any invalid UTF-8 sequences.
+    """
+    # First, encode with surrogateescape to handle any existing surrogates
+    # Then decode back to string with replace to fix any invalid sequences
+    try:
+        # Try to encode/decode to ensure valid UTF-8
+        return s.encode('utf-8', errors='surrogatepass').decode('utf-8', errors='replace')
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        # Fallback: use strict ASCII-safe encoding
+        return s.encode('ascii', errors='replace').decode('ascii')
+
+
 async def _run_agent(prompt: str, env: dict) -> None:
     """Выполняет один запрос к агенту и печатает результат."""
+    # Sanitize the prompt to prevent JSON encoding errors
+    prompt = _sanitize_string(prompt)
+
     # Убираем пустые значения чтобы не передавать пустые строки в MCP
-    mcp_env = {k: v for k, v in env.items() if v}
+    # Also sanitize all environment variable values to prevent encoding issues
+    mcp_env = {k: _sanitize_string(v) for k, v in env.items() if v}
 
     options = ClaudeAgentOptions(
         allowed_tools=[
