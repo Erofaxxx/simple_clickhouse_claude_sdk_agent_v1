@@ -202,7 +202,7 @@ async def _run_agent(prompt: str, env: dict) -> None:
                     "--with",
                     "mcp-clickhouse",
                     "--python",
-                    "3.10",
+                    "3.12",
                     "mcp-clickhouse",
                 ],
                 "env": mcp_env,
