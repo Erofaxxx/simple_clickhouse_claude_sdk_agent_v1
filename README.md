@@ -1,24 +1,48 @@
-# ClickHouse Claude Agent
+# ClickHouse AI Agents
 
-ИИ-агент на базе [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk) для работы с ClickHouse через [MCP-сервер](https://github.com/ClickHouse/mcp-clickhouse).  
-Поддерживает SSL-подключение к **Яндекс Cloud ClickHouse**.
+Два ИИ-агента для работы с ClickHouse через [MCP-сервер](https://github.com/ClickHouse/mcp-clickhouse):
+1. **Claude Agent SDK** — минималистичный агент с прямым подключением
+2. **LangChain Agent** — расширенный агент с ReAct архитектурой
+
+Оба агента поддерживают SSL-подключение к **Яндекс Cloud ClickHouse**.
+
+---
+
+## Выбор агента
+
+| Характеристика | Claude SDK Agent | LangChain Agent |
+|----------------|------------------|-----------------|
+| **Файл** | `agent.py` | `langchain_agent.py` |
+| **Основа** | claude-agent-sdk | LangChain + LangGraph |
+| **Зависимости** | Минимальные | Расширенные |
+| **Память** | ~400-600 МБ | ~600-800 МБ |
+| **Документация** | README.md (этот файл) | [README_LANGCHAIN.md](README_LANGCHAIN.md) |
+
+**Рекомендации:**
+- ✅ Используйте **Claude SDK Agent** для большинства случаев (быстрее, меньше зависимостей)
+- ✅ Используйте **LangChain Agent** если нужна интеграция с LangChain или ReAct архитектура
 
 ---
 
 ## Структура проекта
 
 ```
-agent.py          # основной скрипт агента
-.env.example      # шаблон конфигурации (без реальных данных)
-.env              # ваш конфиг с credentials (НЕ в git)
-requirements.txt  # Python-зависимости
-setup.sh          # скрипт автоматической установки
-README.md
+agent.py                    # агент на Claude SDK
+langchain_agent.py          # агент на LangChain
+requirements.txt            # зависимости для Claude SDK
+requirements_langchain.txt  # зависимости для LangChain
+.env.example               # шаблон конфигурации
+.env                       # ваш конфиг с credentials (НЕ в git)
+setup.sh                   # скрипт автоматической установки
+README.md                  # эта документация (Claude SDK)
+README_LANGCHAIN.md        # документация для LangChain агента
 ```
 
 ---
 
-## Быстрый старт на Ubuntu-сервере
+## Быстрый старт на Ubuntu-сервере (Claude SDK Agent)
+
+> Для LangChain агента см. [README_LANGCHAIN.md](README_LANGCHAIN.md)
 
 ### 1. Клонируйте репозиторий
 
