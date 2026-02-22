@@ -237,11 +237,28 @@ class UltraCleanStreamHandler:
 
 
 def _sanitize_unicode(text: str) -> str:
-    """Удаляет суррогатные символы и другие проблемные Unicode символы."""
+    """Удаляет суррогатные символы и другие проблемные Unicode символы.
+
+    Использует двухэтапный подход для безопасной обработки суррогатов:
+    1. Кодирует с surrogatepass для сохранения существующих суррогатов
+    2. Декодирует с replace для замены невалидных последовательностей
+    """
     if not isinstance(text, str):
-        return text
-    # Заменяем суррогатные символы на замещающий символ
-    return text.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+        return str(text) if text is not None else ""
+
+    try:
+        # Первый проход: обработка существующих суррогатов
+        encoded = text.encode('utf-8', errors='surrogatepass')
+        # Второй проход: декодирование с заменой невалидных последовательностей
+        decoded = encoded.decode('utf-8', errors='replace')
+        return decoded
+    except (UnicodeDecodeError, UnicodeEncodeError, TypeError):
+        # Запасной вариант: безопасное ASCII-кодирование
+        try:
+            return text.encode('ascii', errors='replace').decode('ascii')
+        except:
+            # Последняя попытка: возвращаем пустую строку
+            return ""
 
 
 def _wrap_tool_with_sanitization(tool):
