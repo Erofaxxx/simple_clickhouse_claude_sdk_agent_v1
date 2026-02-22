@@ -107,8 +107,8 @@ def _check_config() -> dict:
         if not cert_path.is_absolute():
             cert_path = _SCRIPT_DIR / cert_path
         if cert_path.exists():
-            ssl_ca_cert = str(cert_path)
-            print(f"✅ SSL сертификат найден: {cert_path}")
+            ssl_ca_cert = str(cert_path.resolve())
+            print(f"✅ SSL сертификат найден: {cert_path.resolve()}")
         else:
             warnings.append(
                 f"SSL сертификат не найден: {cert_path}\n"
@@ -125,8 +125,8 @@ def _check_config() -> dict:
         ]
         for p in fallback_paths:
             if p.exists():
-                ssl_ca_cert = str(p)
-                print(f"✅ SSL сертификат обнаружен автоматически: {p}")
+                ssl_ca_cert = str(p.resolve())
+                print(f"✅ SSL сертификат обнаружен автоматически: {p.resolve()}")
                 break
         if not ssl_ca_cert:
             warnings.append(
