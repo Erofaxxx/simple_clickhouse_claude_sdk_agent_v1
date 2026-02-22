@@ -195,11 +195,29 @@ which mcp-clickhouse
 **`Таймаут подключения`**  
 → Сервер недоступен из данной сети. Проверьте файервол / whitelist IP Яндекс Cloud
 
-**`SSL сертификат не найден`**  
+**`SSL сертификат не найден`**
 → Скачайте сертификат:
 ```bash
 wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
 ```
+
+**`SSL: CERTIFICATE_VERIFY_FAILED - self-signed certificate in certificate chain`**
+→ Сертификат нужно установить в системное хранилище (не просто скачать):
+```bash
+# 1. Скачать сертификат (если ещё не скачали)
+wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
+
+# 2. Копировать в системное хранилище
+sudo cp YandexInternalRootCA.crt /usr/local/share/ca-certificates/
+
+# 3. Обновить хранилище сертификатов
+sudo update-ca-certificates
+
+# 4. Проверить что сертификат добавлен
+ls /etc/ssl/certs/ | grep -i yandex
+```
+→ Скрипт `setup.sh` делает это автоматически при установке.
+→ MCP-сервер использует `truststore.inject_into_ssl()` для чтения системного хранилища.
 
 **`Command failed with exit code -9` / OOM Killer**  
 → Нехватка памяти. См. раздел «OOM / нехватка памяти» выше.
