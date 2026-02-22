@@ -239,7 +239,7 @@ pip install mcp-clickhouse
 | **Архитектура** | Прямое взаимодействие | ReAct (Reasoning + Acting) |
 | **Модель** | Настраивается через SDK | claude-sonnet-4-5-20250929 |
 | **Stream Handler** | Базовый вывод | UltraCleanStreamHandler |
-| **Запуск MCP** | Прямой запуск mcp-clickhouse | Через uv run |
+| **Запуск MCP** | Прямой запуск mcp-clickhouse | Прямой запуск mcp-clickhouse |
 | **Зависимости** | Минимальные (3 пакета) | Расширенные (LangChain экосистема) |
 | **Потребление памяти** | ~400-600 МБ | ~600-800 МБ |
 
