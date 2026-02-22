@@ -283,24 +283,17 @@ async def _run_agent(prompt: str, env: dict) -> None:
     except asyncio.CancelledError:
         # Обработка отмены задачи
         raise
-    except* Exception as exc_group:
-        # Обработка ExceptionGroup (Python 3.11+) для TaskGroup ошибок
-        for exc in exc_group.exceptions:
-            print(f"\n❌ Ошибка при выполнении запроса: {exc}")
-            exc_str = str(exc).lower()
-
-            if "anthropic_api_key" in exc_str or "authentication" in exc_str:
-                print("   → Проверьте правильность ANTHROPIC_API_KEY в файле .env")
-            elif "mcp-clickhouse" in exc_str:
-                print("   → Убедитесь, что mcp-clickhouse установлен: pip install mcp-clickhouse")
-            elif "mcp" in exc_str or "clickhouse" in exc_str or "connect" in exc_str:
-                print(
-                    "   → Проверьте настройки ClickHouse (хост, порт, пользователь, пароль, сертификат)"
-                )
-        raise
     except Exception as exc:
-        print(f"\n❌ Ошибка при выполнении запроса: {exc}")
-        exc_str = str(exc).lower()
+        # Проверяем, является ли это ExceptionGroup (для TaskGroup ошибок)
+        if hasattr(exc, '__cause__') and hasattr(exc.__cause__, 'exceptions'):
+            # Обработка вложенных исключений из TaskGroup
+            print(f"\n❌ Обнаружено несколько ошибок:")
+            for sub_exc in exc.__cause__.exceptions:
+                print(f"   • {sub_exc}")
+            exc_str = str(exc).lower()
+        else:
+            exc_str = str(exc).lower()
+            print(f"\n❌ Ошибка при выполнении запроса: {exc}")
 
         if "anthropic_api_key" in exc_str or "authentication" in exc_str:
             print("   → Проверьте правильность ANTHROPIC_API_KEY в файле .env")
@@ -310,6 +303,11 @@ async def _run_agent(prompt: str, env: dict) -> None:
             print(
                 "   → Проверьте настройки ClickHouse (хост, порт, пользователь, пароль, сертификат)"
             )
+
+        # Добавляем отладочную информацию
+        import traceback
+        print("\n🔍 Подробная информация об ошибке:")
+        traceback.print_exc()
         raise
 
 
