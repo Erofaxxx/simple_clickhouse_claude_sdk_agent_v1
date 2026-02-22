@@ -116,7 +116,7 @@ Handler обеспечивает:
 
 ### Модель по умолчанию
 
-LangChain агент использует `claude-sonnet-4-0` — быструю и эффективную модель для работы с базами данных.
+LangChain агент использует `claude-sonnet-4-5-20250929` — новейшую модель Sonnet 4.5, быструю и эффективную для работы с базами данных.
 
 ### React Agent
 
@@ -210,7 +210,7 @@ pip install mcp-clickhouse
 |----------------|------------------|-----------------|
 | **Основа** | claude-agent-sdk | LangChain + LangGraph |
 | **Архитектура** | Прямое взаимодействие | ReAct (Reasoning + Acting) |
-| **Модель** | Настраивается через SDK | claude-sonnet-4-0 |
+| **Модель** | Настраивается через SDK | claude-sonnet-4-5-20250929 |
 | **Stream Handler** | Базовый вывод | UltraCleanStreamHandler |
 | **Запуск MCP** | Прямой запуск mcp-clickhouse | Через uv run |
 | **Зависимости** | Минимальные (3 пакета) | Расширенные (LangChain экосистема) |
