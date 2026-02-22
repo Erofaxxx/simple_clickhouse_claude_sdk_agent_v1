@@ -50,7 +50,7 @@ except ImportError:
 try:
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
-    from langchain_mcp_adapters import load_mcp_tools
+    from langchain_mcp_adapters.tools import load_mcp_tools
     from langgraph.prebuilt import create_react_agent
 except ImportError as exc:
     print(f"\n❌ Не удалось импортировать необходимые модули: {exc}")
