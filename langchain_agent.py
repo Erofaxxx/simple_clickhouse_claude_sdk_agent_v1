@@ -259,7 +259,7 @@ async def _run_agent(prompt: str, env: dict) -> None:
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 tools = await load_mcp_tools(session)
-                agent = create_react_agent("anthropic:claude-sonnet-4-5-20250929", tools)
+                agent = create_react_agent("anthropic:claude-sonnet-4-6", tools)
 
                 handler = UltraCleanStreamHandler()
                 async for chunk in agent.astream_events(
