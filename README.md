@@ -31,9 +31,10 @@ agent.py                    # агент на Claude SDK
 langchain_agent.py          # агент на LangChain
 requirements.txt            # зависимости для Claude SDK
 requirements_langchain.txt  # зависимости для LangChain
+setup.sh                   # скрипт установки для Claude SDK
+setup_langchain.sh         # скрипт установки для LangChain
 .env.example               # шаблон конфигурации
 .env                       # ваш конфиг с credentials (НЕ в git)
-setup.sh                   # скрипт автоматической установки
 README.md                  # эта документация (Claude SDK)
 README_LANGCHAIN.md        # документация для LangChain агента
 ```

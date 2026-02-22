@@ -26,7 +26,16 @@ git clone <repo-url>
 cd simple_clickhouse_claude_sdk_agent_v1
 ```
 
-### 2. Установите зависимости
+### 2. Запустите скрипт установки (от root или sudo)
+
+Скрипт установит системные пакеты, Python-зависимости, `uv`, `mcp-clickhouse` и скачает SSL-сертификат Яндекс.
+На серверах с ≤ 1 ГБ RAM автоматически создаст swap-файл.
+
+```bash
+bash setup_langchain.sh
+```
+
+Либо установите зависимости вручную:
 
 ```bash
 # Обновите pip
