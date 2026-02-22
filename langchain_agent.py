@@ -51,7 +51,7 @@ try:
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
     from langchain_mcp_adapters.tools import load_mcp_tools
-    from langchain.agents import create_react_agent
+    from langgraph.prebuilt import create_react_agent
 except ImportError as exc:
     print(f"\n❌ Не удалось импортировать необходимые модули: {exc}")
     print("   Установите зависимости:  pip install langchain-mcp-adapters langgraph langchain[anthropic]")
