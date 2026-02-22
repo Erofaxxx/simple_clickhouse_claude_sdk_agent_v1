@@ -236,6 +236,55 @@ class UltraCleanStreamHandler:
 # ─── Запуск агента ────────────────────────────────────────────────────────────
 
 
+def _sanitize_unicode(text: str) -> str:
+    """Удаляет суррогатные символы и другие проблемные Unicode символы.
+
+    Использует двухэтапный подход для безопасной обработки суррогатов:
+    1. Кодирует с surrogatepass для сохранения существующих суррогатов
+    2. Декодирует с replace для замены невалидных последовательностей
+    """
+    if not isinstance(text, str):
+        return str(text) if text is not None else ""
+
+    try:
+        # Первый проход: обработка существующих суррогатов
+        encoded = text.encode('utf-8', errors='surrogatepass')
+        # Второй проход: декодирование с заменой невалидных последовательностей
+        decoded = encoded.decode('utf-8', errors='replace')
+        return decoded
+    except (UnicodeDecodeError, UnicodeEncodeError, TypeError):
+        # Запасной вариант: безопасное ASCII-кодирование
+        try:
+            return text.encode('ascii', errors='replace').decode('ascii')
+        except:
+            # Последняя попытка: возвращаем пустую строку
+            return ""
+
+
+def _wrap_tool_with_sanitization(tool):
+    """Оборачивает инструмент для санитизации его вывода."""
+    original_invoke = tool.invoke
+    original_ainvoke = tool.ainvoke if hasattr(tool, 'ainvoke') else None
+
+    def sanitized_invoke(*args, **kwargs):
+        result = original_invoke(*args, **kwargs)
+        if isinstance(result, str):
+            return _sanitize_unicode(result)
+        return result
+
+    async def sanitized_ainvoke(*args, **kwargs):
+        result = await original_ainvoke(*args, **kwargs)
+        if isinstance(result, str):
+            return _sanitize_unicode(result)
+        return result
+
+    tool.invoke = sanitized_invoke
+    if original_ainvoke:
+        tool.ainvoke = sanitized_ainvoke
+
+    return tool
+
+
 async def _run_agent(prompt: str, env: dict) -> None:
     """Выполняет один запрос к агенту и печатает результат."""
     # Убираем пустые значения чтобы не передавать пустые строки в MCP
@@ -260,7 +309,9 @@ async def _run_agent(prompt: str, env: dict) -> None:
         async with stdio_client(server_params) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                tools = await load_mcp_tools(session)
+                raw_tools = await load_mcp_tools(session)
+                # Оборачиваем все инструменты для санитизации их вывода
+                tools = [_wrap_tool_with_sanitization(tool) for tool in raw_tools]
                 agent = create_react_agent("anthropic:claude-sonnet-4-6", tools)
 
                 handler = UltraCleanStreamHandler()
