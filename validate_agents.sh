@@ -90,7 +90,7 @@ echo
 echo "LangChain Agent (langchain_agent.py):"
 echo "  - Uses: LangChain + LangGraph"
 echo "  - Memory: ~600-800 MB"
-echo "  - MCP Launch: Via uv run"
+echo "  - MCP Launch: Direct mcp-clickhouse"
 grep -c "from langchain_mcp_adapters import" langchain_agent.py > /dev/null && echo "  - ✅ Imports langchain-mcp-adapters"
 grep -c "create_react_agent" langchain_agent.py > /dev/null && echo "  - ✅ Uses ReAct agent"
 grep -c "class UltraCleanStreamHandler" langchain_agent.py > /dev/null && echo "  - ✅ Implements UltraCleanStreamHandler"

@@ -317,15 +317,8 @@ async def _run_agent(prompt: str, env: dict) -> None:
 
     # Параметры MCP сервера
     server_params = StdioServerParameters(
-        command="uv",
-        args=[
-            "run",
-            "--with",
-            "mcp-clickhouse",
-            "--python",
-            "3.13",
-            "mcp-clickhouse",
-        ],
+        command="mcp-clickhouse",
+        args=[],
         env=mcp_env,
     )
 

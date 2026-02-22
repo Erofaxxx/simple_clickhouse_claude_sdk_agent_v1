@@ -17,7 +17,7 @@ The repository now contains **two separate agents** for working with ClickHouse 
 |---------|------------------|-----------------|
 | **Framework** | claude-agent-sdk | LangChain + LangGraph |
 | **Agent Type** | Direct query | ReAct (Reasoning + Acting) |
-| **MCP Launch** | Direct `mcp-clickhouse` | Via `uv run` |
+| **MCP Launch** | Direct `mcp-clickhouse` | Direct `mcp-clickhouse` |
 | **Stream Handler** | Basic output | UltraCleanStreamHandler |
 
 ### Dependencies
