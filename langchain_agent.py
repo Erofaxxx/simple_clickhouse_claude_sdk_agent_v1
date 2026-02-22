@@ -262,26 +262,51 @@ def _sanitize_unicode(text: str) -> str:
 
 
 def _wrap_tool_with_sanitization(tool):
-    """Оборачивает инструмент для санитизации его вывода."""
-    original_invoke = tool.invoke
-    original_ainvoke = tool.ainvoke if hasattr(tool, 'ainvoke') else None
+    """Оборачивает инструмент для санитизации его вывода.
 
-    def sanitized_invoke(*args, **kwargs):
-        result = original_invoke(*args, **kwargs)
-        if isinstance(result, str):
-            return _sanitize_unicode(result)
-        return result
+    Использует композицию вместо модификации атрибутов Pydantic модели.
+    Создаёт новый StructuredTool с теми же параметрами, но обёрнутыми функциями.
+    """
+    from langchain_core.tools import StructuredTool
 
-    async def sanitized_ainvoke(*args, **kwargs):
-        result = await original_ainvoke(*args, **kwargs)
-        if isinstance(result, str):
-            return _sanitize_unicode(result)
-        return result
+    # Получаем оригинальные методы
+    original_func = tool.func if hasattr(tool, 'func') else None
+    original_coroutine = tool.coroutine if hasattr(tool, 'coroutine') else None
 
-    tool.invoke = sanitized_invoke
-    if original_ainvoke:
-        tool.ainvoke = sanitized_ainvoke
+    if original_func:
+        # Оборачиваем синхронную функцию
+        def sanitized_func(*args, **kwargs):
+            result = original_func(*args, **kwargs)
+            if isinstance(result, str):
+                return _sanitize_unicode(result)
+            return result
 
+        # Создаём новый инструмент с обёрнутой функцией
+        return StructuredTool(
+            name=tool.name,
+            description=tool.description,
+            func=sanitized_func,
+            coroutine=original_coroutine,
+            args_schema=tool.args_schema if hasattr(tool, 'args_schema') else None,
+        )
+    elif original_coroutine:
+        # Оборачиваем асинхронную функцию
+        async def sanitized_coroutine(*args, **kwargs):
+            result = await original_coroutine(*args, **kwargs)
+            if isinstance(result, str):
+                return _sanitize_unicode(result)
+            return result
+
+        # Создаём новый инструмент с обёрнутой корутиной
+        return StructuredTool(
+            name=tool.name,
+            description=tool.description,
+            func=None,
+            coroutine=sanitized_coroutine,
+            args_schema=tool.args_schema if hasattr(tool, 'args_schema') else None,
+        )
+
+    # Если не удалось обернуть, возвращаем инструмент без изменений
     return tool
 
 
