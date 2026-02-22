@@ -120,8 +120,10 @@ def _check_config() -> dict:
         # Поиск в стандартных местах
         fallback_paths = [
             _SCRIPT_DIR / "YandexInternalRootCA.crt",
+            _SCRIPT_DIR / "YandexInternalRootCA.pem",
             Path("/root/.clickhouse-client/root.crt"),
             Path("/etc/ssl/certs/YandexInternalRootCA.crt"),
+            Path("/etc/ssl/certs/YandexInternalRootCA.pem"),
         ]
         for p in fallback_paths:
             if p.exists():
