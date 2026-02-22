@@ -49,6 +49,9 @@ echo "   claude-agent-sdk, python-dotenv и mcp-clickhouse установлен�
 
 # ── 3. SSL-сертификат Яндекс ─────────────────────────────────────────────────
 CERT_FILE="$(dirname "$0")/YandexInternalRootCA.crt"
+SYSTEM_CERT="/usr/local/share/ca-certificates/YandexInternalRootCA.crt"
+
+# Скачиваем сертификат в директорию проекта
 if [ -f "$CERT_FILE" ]; then
     echo
     echo "✅ SSL-сертификат уже существует: $CERT_FILE"
@@ -57,6 +60,20 @@ else
     echo "⬇️  Скачивание SSL-сертификата Яндекс Cloud..."
     wget -q "https://storage.yandexcloud.net/cloud-certs/CA.pem" -O "$CERT_FILE"
     echo "✅ Сертификат сохранён: $CERT_FILE"
+fi
+
+# Устанавливаем сертификат в системное хранилище
+echo
+echo "🔐 Установка сертификата в системное хранилище..."
+if [ -f "$SYSTEM_CERT" ]; then
+    echo "✅ Сертификат уже установлен в системное хранилище"
+else
+    echo "   Копирование в /usr/local/share/ca-certificates/..."
+    cp "$CERT_FILE" "$SYSTEM_CERT"
+    echo "   Обновление системного хранилища сертификатов..."
+    update-ca-certificates --fresh > /dev/null 2>&1
+    echo "✅ Сертификат установлен в системное хранилище"
+    echo "   Теперь mcp-clickhouse сможет автоматически использовать его"
 fi
 
 # ── 4. .env файл ──────────────────────────────────────────────────────────────

@@ -58,12 +58,37 @@ echo
 
 # 5. Скачивание SSL сертификата Яндекс Cloud
 CERT_FILE="YandexInternalRootCA.crt"
+SYSTEM_CERT="/usr/local/share/ca-certificates/YandexInternalRootCA.crt"
+
 if [ ! -f "$CERT_FILE" ]; then
     echo "🔒 Скачивание SSL сертификата Яндекс Cloud..."
     wget -q https://storage.yandexcloud.net/cloud-certs/CA.pem -O "$CERT_FILE"
     echo "✅ SSL сертификат скачан: $CERT_FILE"
 else
     echo "✅ SSL сертификат уже существует: $CERT_FILE"
+fi
+
+echo
+
+# 5.1. Установка сертификата в системное хранилище
+echo "🔐 Установка сертификата в системное хранилище..."
+if [ -f "$SYSTEM_CERT" ]; then
+    echo "✅ Сертификат уже установлен в системное хранилище"
+else
+    if [ "$EUID" -ne 0 ]; then
+        echo "⚠️  Требуются права root для установки сертификата в систему"
+        echo "   Запустите: sudo bash setup_langchain.sh"
+        echo "   Или установите вручную:"
+        echo "   sudo cp $CERT_FILE /usr/local/share/ca-certificates/"
+        echo "   sudo update-ca-certificates"
+    else
+        echo "   Копирование в /usr/local/share/ca-certificates/..."
+        cp "$CERT_FILE" "$SYSTEM_CERT"
+        echo "   Обновление системного хранилища сертификатов..."
+        update-ca-certificates --fresh > /dev/null 2>&1
+        echo "✅ Сертификат установлен в системное хранилище"
+        echo "   Теперь mcp-clickhouse сможет автоматически использовать его"
+    fi
 fi
 
 echo

@@ -193,6 +193,24 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
 ```
 
+**`SSL: CERTIFICATE_VERIFY_FAILED - self-signed certificate in certificate chain`**
+→ Сертификат нужно установить в системное хранилище (не просто скачать):
+```bash
+# 1. Скачать сертификат (если ещё не скачали)
+wget https://storage.yandexcloud.net/cloud-certs/CA.pem -O YandexInternalRootCA.crt
+
+# 2. Копировать в системное хранилище
+sudo cp YandexInternalRootCA.crt /usr/local/share/ca-certificates/
+
+# 3. Обновить хранилище сертификатов
+sudo update-ca-certificates
+
+# 4. Проверить что сертификат добавлен
+ls /etc/ssl/certs/ | grep -i yandex
+```
+→ Скрипт `setup_langchain.sh` делает это автоматически при установке.
+→ MCP-сервер использует `truststore.inject_into_ssl()` для чтения системного хранилища.
+
 **`mcp-clickhouse: command not found`**
 → Установите mcp-clickhouse:
 ```bash
